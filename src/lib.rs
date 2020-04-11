@@ -1,4 +1,5 @@
 pub mod client;
+pub mod consts;
 
 #[cfg(test)]
 mod tests {

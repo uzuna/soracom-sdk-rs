@@ -1,12 +1,7 @@
 use serde_derive::*;
-
+use crate::consts::*;
 use chrono::{DateTime, Utc};
 
-const SORACOM_API_ENDPOINT: &'static str = "api.soracom.io";
-const SORACOM_GLOBAL_API_ENDPOINT: &'static str = "g.api.soracom.io";
-const SORACOM_SANDBOX_API_ENDPOINT: &'static str = "api-sandbox.soracom.io";
-const SORACOM_API_HEADER_API_KEY: &'static str = "X-Soracom-API-Key";
-const SORACOM_API_HEADER_TOKEN: &'static str = "X-Soracom-Token";
 
 #[derive(Debug, Default)]
 pub struct Client<'a> {
