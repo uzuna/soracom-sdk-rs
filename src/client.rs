@@ -1,7 +1,5 @@
-use serde_derive::*;
 use crate::consts::*;
-use chrono::{DateTime, Utc};
-
+use crate::model::*;
 
 #[derive(Debug, Default)]
 pub struct Client<'a> {
@@ -9,53 +7,6 @@ pub struct Client<'a> {
   api_key: String,
   token: String,
   endpoint: &'a str,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct AuthRequest<'a> {
-  #[serde(rename = "authKeyId")]
-  auth_key_id: &'a str,
-  #[serde(rename = "authKey")]
-  auth_key: &'a str,
-  #[serde(rename = "tokenTimeoutSeconds")]
-  token_timeout_seconds: u32,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct AuthResponse<'a> {
-  #[serde(rename = "apiKey")]
-  api_key: &'a str,
-  #[serde(rename = "operatorId")]
-  operator_id: &'a str,
-  #[serde(rename = "token")]
-  token: &'a str,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Subscriber {
-  apn: String,
-  #[serde(rename = "createdAt")]
-  created_at: DateTime<Utc>,
-  #[serde(rename = "expiredAt")]
-  expired_at: DateTime<Utc>,
-  // #[serde(rename = "expiredAt")]
-  // ExpiryAction       String         `json:"expiryAction,omitempty"`
-  // GroupID            String         `json:"groupId,omitempty"`
-  // ICCID              string          `json:"iccid,omitempty"`
-  // IMEILock           *IMEILock       `json:"imeiLock,omitempty"`
-  // IMSI               string          `json:"imsi"`
-  // IPAddress          *string         `json:"ipAddress,omitempty"`
-  // LastModifiedAt     *TimestampMilli `json:"lastModifiedAt"`
-  // ModuleType         string          `json:"ModuleType"`
-  // MSISDN             string          `json:"msisdn"`
-  // OperatorID         string          `json:"operatorId"`
-  // Plan               int             `json:"plan"`
-  // SerialNumber       string          `json:"serialNumber"`
-  // SessionStatus      *SessionStatus  `json:"sessionStatus"`
-  // SpeedClass         string          `json:"speedClass"`
-  // Status             string          `json:"status"`
-  // Tags               Tags            `json:"tags"`
-  // TerminationEnabled bool            `json:"terminationEnabled"`
 }
 
 impl Client<'_> {
@@ -102,7 +53,7 @@ impl Client<'_> {
     }
   }
 
-  async fn list_subscriber(&self) -> Result<String, Box<dyn std::error::Error>> {
+  async fn list_subscriber(&self) -> Result<Vec<Subscriber>, Box<dyn std::error::Error>> {
     let res = self
       .http_client
       .get(&self.get_url("/v1/subscribers"))
@@ -112,7 +63,9 @@ impl Client<'_> {
       .send()
       .await?;
     println!("{:?}", res);
-    Ok(res.text().await?)
+    let resbody = res.text().await?;
+    let resbody: Vec<Subscriber> = serde_json::from_str(&resbody)?;
+    Ok(resbody)
   }
 
   fn get_url<'a>(&self, path: &'a str) -> String {
