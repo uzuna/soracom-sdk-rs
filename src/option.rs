@@ -1,10 +1,17 @@
 use std::default::Default;
 extern crate serde_qs as qs;
 
+pub trait QueryParams {
+    fn to_query_params(&self) -> Option<String>;
+}
+
 #[derive(Debug, PartialEq, Deserialize, Serialize)]
 pub enum TagValueMatchMode {
+    // they don't match tag values (i.e. list all items regardless of values of tags) if this value is specified.
     Unspecified,
+    // they do exact match for tag values if this value is specified.
     Exact,
+    // they do prefix match for tag values if this value is specified.
     Prefix,
 }
 
@@ -24,6 +31,7 @@ impl std::default::Default for TagValueMatchMode {
         TagValueMatchMode::Unspecified
     }
 }
+
 #[derive(Debug, PartialEq, Deserialize, Serialize, Default)]
 pub struct ListSubscribersOptions {
     tag_name: Option<String>,
@@ -33,6 +41,15 @@ pub struct ListSubscribersOptions {
     type_filter: Option<String>,
     limit: Option<i16>,
     last_evaluated_key: Option<String>,
+}
+
+impl QueryParams for ListSubscribersOptions {
+    fn to_query_params(&self) -> Option<String> {
+        match qs::to_string(&self) {
+            Ok(s) => Some(s),
+            _ => None,
+        }
+    }
 }
 
 #[cfg(test)]
