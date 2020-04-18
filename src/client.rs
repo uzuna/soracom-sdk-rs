@@ -31,11 +31,7 @@ impl Client<'_> {
       token_timeout_seconds: 60,
     };
     let res = self
-      .http_client
-      .post(&addr.to_string())
-      .header(reqwest::header::CONTENT_TYPE, "application/json")
-      .body(serde_json::to_string(&reqbody)?)
-      .send()
+      .post(&addr.to_string(), serde_json::to_string(&reqbody)?)
       .await?;
     match res.status() {
       reqwest::StatusCode::OK => {
@@ -70,6 +66,16 @@ impl Client<'_> {
 
   fn get_url<'a>(&self, path: &'a str) -> String {
     format!("https://{}{}", self.endpoint, path)
+  }
+
+  async fn post<'a>(&self, url: &str, reqbody: String) -> reqwest::Result<reqwest::Response> {
+    self
+      .http_client
+      .post(url)
+      .header(reqwest::header::CONTENT_TYPE, "application/json")
+      .body(reqbody)
+      .send()
+      .await
   }
 }
 
