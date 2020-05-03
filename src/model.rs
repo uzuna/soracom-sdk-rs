@@ -47,14 +47,14 @@ pub struct Cell {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SessionStatus {
     #[serde(rename = "dnsServers")]
-    dns_servers: Vec<String>,
-    imei: String,
-    #[serde(rename = "LastUpdatedAt", deserialize_with = "optdatefmt")]
+    dns_servers: Option<Vec<String>>,
+    imei: Option<String>,
+    #[serde(rename = "lastUpdatedAt", deserialize_with = "optdatefmt")]
     last_updated_at: Option<DateTime<Utc>>,
     location: Option<String>,
     cell: Option<Cell>,
     online: bool,
-    ue_ip_address: String,
+    ue_ip_address: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -144,6 +144,9 @@ mod tests {
     #[test]
     fn parse() {
         let resbody = "[{\"imsi\":\"001050910800000\",\"msisdn\":\"991649918745\",\"ipAddress\":null,\"operatorId\":\"OP9920648489\",\"apn\":\"soracom.io\",\"type\":\"s1.standard\",\"groupId\":null,\"createdAt\":1586584405503,\"lastModifiedAt\":1586584405516,\"expiredAt\":null,\"registeredTime\":null,\"expiryAction\":null,\"terminationEnabled\":false,\"status\":\"ready\",\"tags\":{},\"sessionStatus\":null,\"imeiLock\":null,\"speedClass\":\"s1.standard\",\"moduleType\":\"trio\",\"plan\":1,\"iccid\":\"0012310019719419000\",\"serialNumber\":\"0011900089423197194\",\"subscription\":\"plan01s\",\"lastPortMappingCreatedTime\":null,\"createdTime\":1586584405503,\"expiryTime\":null,\"lastModifiedTime\":1586584405516}]";
+        let resbody: Vec<Subscriber> = serde_json::from_str(&resbody).unwrap();
+        println!("{:?}", resbody);
+        let resbody ="[{\"imsi\":\"001050910800000\",\"msisdn\":\"991649918745\",\"ipAddress\":\"10.145.1.2\",\"operatorId\":\"OP9920648489\",\"apn\":\"soracom.io\",\"type\":\"s1.standard\",\"groupId\":\"1135dedb-ec7e-4e8c-ae43-8f2902aaae10\",\"createdAt\":1586584405503,\"lastModifiedAt\":1586584405516,\"expiredAt\":null,\"registeredTime\":null,\"expiryAction\":null,\"terminationEnabled\":false,\"status\":\"active\",\"tags\":{\"tagA\":\"valueA\"},\"sessionStatus\":{\"gtpcTeid\":0,\"lastUpdatedAt\":1586785804388,\"imei\":null,\"location\":null,\"ueIpAddress\":null,\"dnsServers\":null,\"online\":false},\"imeiLock\":null,\"speedClass\":\"s1.standard\",\"moduleType\":\"trio\",\"plan\":1,\"iccid\":\"0012310019719419000\",\"serialNumber\":\"0011900089423197194\",\"subscription\":\"plan01s\",\"lastPortMappingCreatedTime\":null,\"createdTime\":1586584405503,\"expiryTime\":null,\"lastModifiedTime\":1586584405516}]";
         let resbody: Vec<Subscriber> = serde_json::from_str(&resbody).unwrap();
         println!("{:?}", resbody);
     }

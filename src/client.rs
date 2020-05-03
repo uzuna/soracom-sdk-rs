@@ -52,7 +52,7 @@ impl Client<'_> {
     }
   }
 
-  async fn list_subscriber(
+  pub async fn list_subscriber(
     &self,
     opt: Option<option::ListSubscribersOptions>,
   ) -> Result<Vec<Subscriber>, Box<dyn std::error::Error>> {
@@ -64,16 +64,19 @@ impl Client<'_> {
       }
       _ => {}
     }
-    let req = self
-      .http_client
-      .get(&url.to_string())
-      .header(reqwest::header::CONTENT_TYPE, "application/json")
-      .header(SORACOM_API_HEADER_API_KEY, &self.api_key)
-      .header(SORACOM_API_HEADER_TOKEN, &self.token);
-    let res = req.send().await?;
-    println!("{:?}", res);
+    let res = self._get(&url).await?;
     let resbody = res.text().await?;
+    println!("{:?}", &resbody);
     let resbody: Vec<Subscriber> = serde_json::from_str(&resbody)?;
+    Ok(resbody)
+  }
+
+  pub async fn get_subscriber(&self, imsi: &str) -> Result<Subscriber, Box<dyn std::error::Error>> {
+    let url = &mut self.get_url(format!("/v1/subscribers/{}", imsi).as_ref())?;
+
+    let res = self._get(&url).await?;
+    let resbody = res.text().await?;
+    let resbody: Subscriber = serde_json::from_str(&resbody)?;
     Ok(resbody)
   }
 
@@ -87,6 +90,17 @@ impl Client<'_> {
       .post(url)
       .header(reqwest::header::CONTENT_TYPE, "application/json")
       .body(reqbody)
+      .send()
+      .await
+  }
+
+  async fn _get<'a>(&self, url: &Url) -> reqwest::Result<reqwest::Response> {
+    self
+      .http_client
+      .get(&url.to_string())
+      .header(reqwest::header::CONTENT_TYPE, "application/json")
+      .header(SORACOM_API_HEADER_API_KEY, &self.api_key)
+      .header(SORACOM_API_HEADER_TOKEN, &self.token)
       .send()
       .await
   }
@@ -118,6 +132,11 @@ mod tests {
     println!("{:?}", resp);
 
     let resp = client.list_subscriber(None).await;
-    println!("{:?}", resp);
+    println!("list {:?}", resp);
+
+    let subs = resp.unwrap();
+
+    let resp = client.get_subscriber(&subs[0].imsi).await;
+    println!("get {:?}", resp);
   }
 }
