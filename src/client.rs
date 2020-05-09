@@ -1,7 +1,7 @@
-use crate::consts::*;
 use crate::model::*;
 use crate::option;
 use crate::option::QueryParams;
+use crate::*;
 use url::{ParseError, Url};
 
 #[derive(Debug, Default)]
@@ -101,6 +101,17 @@ impl Client<'_> {
       .header(reqwest::header::CONTENT_TYPE, "application/json")
       .header(SORACOM_API_HEADER_API_KEY, &self.api_key)
       .header(SORACOM_API_HEADER_TOKEN, &self.token)
+      .send()
+      .await
+  }
+  async fn _post<'a>(&self, url: &str, reqbody: String) -> reqwest::Result<reqwest::Response> {
+    self
+      .http_client
+      .post(url)
+      .header(reqwest::header::CONTENT_TYPE, "application/json")
+      .header(SORACOM_API_HEADER_API_KEY, &self.api_key)
+      .header(SORACOM_API_HEADER_TOKEN, &self.token)
+      .body(reqbody)
       .send()
       .await
   }
