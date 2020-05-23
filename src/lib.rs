@@ -6,8 +6,10 @@ extern crate serde_qs as qs;
 pub mod client;
 pub mod error;
 pub mod model;
+pub mod object;
 pub mod option;
 pub mod sandbox;
+pub(crate) mod util;
 
 pub const SORACOM_API_ENDPOINT: &'static str = "api.soracom.io";
 pub const SORACOM_GLOBAL_API_ENDPOINT: &'static str = "g.api.soracom.io";

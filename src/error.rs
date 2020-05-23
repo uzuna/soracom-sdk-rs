@@ -25,6 +25,7 @@ pub enum ErrorKind {
   JSON(serde_json::error::Error),
   Request(reqwest::Error),
   URL(url::ParseError),
+  Env(std::env::VarError),
   HTTP(String),
 }
 
@@ -45,6 +46,11 @@ impl From<url::ParseError> for Error {
     Error::new(ErrorKind::URL(err))
   }
 }
+impl From<std::env::VarError> for Error {
+  fn from(err: std::env::VarError) -> Error {
+    Error::new(ErrorKind::Env(err))
+  }
+}
 
 impl StdError for Error {
   fn source(&self) -> Option<&(dyn StdError + 'static)> {
@@ -52,6 +58,7 @@ impl StdError for Error {
       ErrorKind::JSON(ref err) => Some(err),
       ErrorKind::Request(ref err) => Some(err),
       ErrorKind::URL(ref err) => Some(err),
+      ErrorKind::Env(ref err) => Some(err),
       ErrorKind::HTTP(_) => None,
     }
   }
@@ -63,6 +70,7 @@ impl fmt::Display for Error {
       ErrorKind::JSON(ref err) => err.fmt(f),
       ErrorKind::Request(ref err) => err.fmt(f),
       ErrorKind::URL(ref err) => err.fmt(f),
+      ErrorKind::Env(ref err) => err.fmt(f),
       ErrorKind::HTTP(ref err) => write!(f, "HTTP error: {}", err),
     }
   }
