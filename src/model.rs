@@ -16,7 +16,10 @@ pub struct SubscriberRegistration {
 
 impl SubscriberRegistration {
     pub fn fmt_registration_body(&self) -> String {
-        format!("{{\"registrationSecret\": {}}}", self.registration_secret)
+        format!(
+            "{{\"registrationSecret\": \"{}\"}}",
+            self.registration_secret
+        )
     }
 }
 
@@ -28,6 +31,65 @@ pub(crate) struct AuthRequest<'a> {
     pub(crate) auth_key: &'a str,
     #[serde(rename = "tokenTimeoutSeconds")]
     pub(crate) token_timeout_seconds: u32,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AuthRequestByEmail {
+    pub email: String,
+    pub password: String,
+    #[serde(rename = "tokenTimeoutSeconds")]
+    pub token_timeout_seconds: u32,
+}
+impl Default for AuthRequestByEmail {
+    fn default() -> Self {
+        Self {
+            email: String::new(),
+            password: String::new(),
+            token_timeout_seconds: 86400,
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AuthRequestByAuthKey {
+    #[serde(rename = "authKeyId")]
+    pub auth_key_id: String,
+    #[serde(rename = "authKey")]
+    pub auth_key: String,
+    #[serde(rename = "tokenTimeoutSeconds")]
+    pub token_timeout_seconds: u32,
+}
+
+impl Default for AuthRequestByAuthKey {
+    fn default() -> Self {
+        Self {
+            auth_key_id: String::new(),
+            auth_key: String::new(),
+            token_timeout_seconds: 86400,
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AuthRequestBySAM {
+    #[serde(rename = "operatorId")]
+    pub operator_id: String,
+    #[serde(rename = "userName")]
+    pub user_name: String,
+    pub password: String,
+    #[serde(rename = "tokenTimeoutSeconds")]
+    pub token_timeout_seconds: u32,
+}
+
+impl Default for AuthRequestBySAM {
+    fn default() -> Self {
+        Self {
+            operator_id: String::new(),
+            user_name: String::new(),
+            password: String::new(),
+            token_timeout_seconds: 86400,
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
