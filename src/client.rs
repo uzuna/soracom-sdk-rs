@@ -52,6 +52,24 @@ impl Client<'_> {
     }
   }
 
+  fn auth_token(&mut self, api_key: &str, token: &str) {
+    self.api_key = api_key.to_owned();
+    self.token = token.to_owned();
+  }
+
+  pub async fn register_subscriber(
+    &self,
+    regi: &SubscriberRegistration,
+  ) -> Result<(), Box<dyn std::error::Error>> {
+    let url = &mut self.get_url(format!("/v1/subscribers/{}/register", regi.imsi).as_ref())?;
+    let res = self
+      ._post(&url.to_string(), regi.fmt_registration_body())
+      .await?;
+    let resbody = res.text().await?;
+    println!("{:?}", &resbody);
+    Ok(())
+  }
+
   pub async fn list_subscriber(
     &self,
     opt: Option<option::ListSubscribersOptions>,
@@ -120,18 +138,29 @@ impl Client<'_> {
 #[cfg(test)]
 mod tests {
   use crate::client::*;
+  use crate::sandbox;
   use std::collections::HashMap;
+  use tokio::runtime::Runtime;
 
-  #[tokio::test]
-  async fn async_http_request_with_client() {
-    let client = Client::new();
-    let resp = client
-      .get("https://httpbin.org/uuid")
-      .await
-      .unwrap()
-      .json::<HashMap<String, String>>()
-      .await;
-    println!("{:?}", resp)
+  #[test]
+  fn with_sandbox() -> Result<(), Box<dyn std::error::Error>> {
+    let mut rt = Runtime::new()?;
+    rt.block_on(async {
+      let mut client = sandbox::SandboxClient::new();
+      let cred = sandbox::read_credential_for_test().unwrap();
+      let token = client.init(&cred).await.unwrap();
+      let subs = client.create_subscriber().await.unwrap();
+
+      {
+        let mut client = Client::new();
+        client.endpoint = SORACOM_SANDBOX_API_ENDPOINT;
+        client.auth_token(&token.api_key, &token.token);
+        let _resp = client.register_subscriber(&subs).await.unwrap();
+        // println!("{:?}", resp);
+      }
+    });
+    println!("after done!");
+    Ok(())
   }
 
   #[tokio::test]

@@ -7,6 +7,20 @@ use std::collections::HashMap;
 // use std::fmt::Display;
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct SubscriberRegistration {
+    pub imsi: String,
+    pub msisdn: String,
+    #[serde(rename = "registrationSecret")]
+    pub registration_secret: String,
+}
+
+impl SubscriberRegistration {
+    pub fn fmt_registration_body(&self) -> String {
+        format!("{{\"registrationSecret\": {}}}", self.registration_secret)
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub(crate) struct AuthRequest<'a> {
     #[serde(rename = "authKeyId")]
     pub(crate) auth_key_id: &'a str,

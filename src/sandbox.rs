@@ -1,4 +1,5 @@
 use crate::error::Error;
+use crate::model::SubscriberRegistration;
 use crate::util;
 use crate::util::HTTPMethod::*;
 use crate::SORACOM_SANDBOX_API_ENDPOINT;
@@ -17,30 +18,22 @@ pub struct SandboxClient {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SandboxInitCredential {
-  email: String,
-  password: String,
+  pub email: String,
+  pub password: String,
   #[serde(rename = "authKeyId")]
-  auth_key_id: String,
+  pub auth_key_id: String,
   #[serde(rename = "authKey")]
-  auth_key: String,
+  pub auth_key: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SandboxToken {
   #[serde(rename = "operatorId")]
-  operator_id: String,
+  pub operator_id: String,
   #[serde(rename = "apiKey")]
-  api_key: String,
+  pub api_key: String,
   #[serde(rename = "token")]
-  token: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct SandboxSubscriber {
-  imsi: String,
-  msisdn: String,
-  #[serde(rename = "registrationSecret")]
-  registration_secret: String,
+  pub token: String,
 }
 
 impl Drop for SandboxClient {
@@ -73,7 +66,7 @@ fn delete_operator(endpoint_url: &str, token: &SandboxToken) -> Result<(), Error
 /// SORACOM SandBox API Client
 ///
 impl SandboxClient {
-  fn new() -> Self {
+  pub fn new() -> Self {
     Self {
       http_client: util::HTTPClient::new(),
       endpoint: SORACOM_SANDBOX_API_ENDPOINT.to_owned(),
@@ -91,7 +84,13 @@ impl SandboxClient {
     Ok(token)
   }
 
-  pub async fn delete(&self, token: SandboxToken) -> Result<(), Error> {
+  pub async fn create_subscriber(self) -> Result<SubscriberRegistration, Error> {
+    let url = self.build_url("/v1/sandbox/subscribers/create")?;
+    let subs: SubscriberRegistration = self.http_client.request_json(POST, url, None).await?;
+    Ok(subs)
+  }
+
+  pub async fn delete_operator(&self, token: SandboxToken) -> Result<(), Error> {
     let url = self.build_url(format!("/v1/sandbox/operators/{}", token.operator_id).as_ref())?;
     self.http_client.request(DELETE, url, None).await
   }
@@ -101,30 +100,32 @@ impl SandboxClient {
   }
 }
 
+pub fn read_credential_for_test() -> Result<SandboxInitCredential, Error> {
+  let email = std::env::var("SANDBOX_EMAIL_FOR_TEST")?;
+  let password = std::env::var("SANDBOX_PASSWORD_FOR_TEST")?;
+  let auth_key_id = std::env::var("SORACOM_AUTHKEY_ID_FOR_TEST")?;
+  let auth_key = std::env::var("SORACOM_AUTHKEY_FOR_TEST")?;
+  Ok(SandboxInitCredential {
+    email,
+    password,
+    auth_key_id,
+    auth_key,
+  })
+}
+
 #[cfg(test)]
 mod tests {
   use crate::error::*;
   use crate::sandbox::*;
 
-  fn read_credential() -> Result<SandboxInitCredential, Error> {
-    let email = std::env::var("SANDBOX_EMAIL_FOR_TEST")?;
-    let password = std::env::var("SANDBOX_PASSWORD_FOR_TEST")?;
-    let auth_key_id = std::env::var("SORACOM_AUTHKEY_ID_FOR_TEST")?;
-    let auth_key = std::env::var("SORACOM_AUTHKEY_FOR_TEST")?;
-    Ok(SandboxInitCredential {
-      email,
-      password,
-      auth_key_id,
-      auth_key,
-    })
-  }
-
   #[tokio::test]
   async fn sandbox() -> Result<(), Box<Error>> {
     let mut client = SandboxClient::new();
-    let cred = read_credential().unwrap();
+    let cred = read_credential_for_test().unwrap();
     let _token = client.init(&cred).await.unwrap();
     // println!("{:?}", token);
+    let subs = client.create_subscriber().await.unwrap();
+    println!("{:?}", subs);
     Ok(())
   }
 }
